@@ -52,9 +52,10 @@ Here are some examples of how to use the scripts:
 
 1. Summarize a large text file:
 ```python run.py --input "input.txt" --output "summary.txt" --task summarization --max_length 500 --min_length 100 --chunk_size 1024```
+
 Working Example:```python run.py --input "input/BART.txt" --output "output/bartsummary.txt" --task summarization```  
 
-2. Extract topics from a large text file:
+3. Extract topics from a large text file:
 ```python run.py --input "input.txt" --output "topics.txt" --task topic_extraction```
 
 
