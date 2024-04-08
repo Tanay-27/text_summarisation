@@ -1,0 +1,56 @@
+BART stands for Bidirectional and Auto-Regressive Transformer. It is a denoising autoencoder that is a pre-trained sequence-to-sequence method, that uses masked language modeling for Natural Language Generation and Translation. It is developed by Lewis et al. in 2019. BART architecture is similar to an encoder-decoder network except that it uses a combination of BERT and GPT models. The BART models can be fine-tuned over small supervised datasets to create domain-specific tasks. 
+
+Denoising autoencoder
+
+An autoencoder is a special type of neural network that learns to encode an input sentence into lower dimensional representations and decode the embedded representations back to the corresponding original input sentences. In a general case, when the input and output sentence of an autoencoder is the same, over a large number of iterations, the autoencoder network directly maps the input token to the output tokens, and the embedded representation that is usually learned between them becomes redundant. Therefore, we modify the input sentence by randomly deleting word tokens and replacing them with a special <MASK> token, this sentence with the randomly deleted token is called a corrupted or noisy sentence and the supervised output for the corresponding input is the clean sentence with all the original tokens preserved. By learning to predict the missing or corrupted tokens, the denoising autoencoder learns to extract meaningful features from the input sentence. A denoising autoencoder is trained on a large corpus of such data so it learns to predict the masked/deleted token in the input sentence which is responsible for the noise in the text, as a result, we get a clean and semantically coherent output, hence the term “denoising” is added to the autoencoder.
+
+BART (Bidirectional and Auto-Regressive Transformer) Architecture
+For a given input text sequence, the BERT (Bidirectional Representation for Transformers) encoder network generates an embedding for each token in the input text and an additional sentence-level embedding vector. The GPT decoder network learns this token-level and sentence-level embedded information and its existing pre-trained weights to generate clean semantically close text sequences.
+
+BART has approximately 140 million parameters which are greater than BERT (110 million parameters) and GPT-1 (117 million) models but outperform them significantly given that BART is a combination of them both.
+
+BART’s primary task is used to generate clean semantically coherent text from corrupted text data but it can also be used for a variety of different NLP sub-tasks like language translation, question-answering tasks, text summarization, paraphrasing, etc.
+
+As BART is an autoencoder model, it consists of an encoder model and a decoder model. For its encoder model, BART uses a  bi-directional encoder that is used in BERT, and for its decoder mode, it uses an autoregressive decoder that forms the core aspect of a GPT -1 model. 
+
+An autoregressive decoder is a neural network architecture that takes the previous input tokens as well as the current token to predict the next token at every time step. It is important to remember that the input accepted by a decoder is an embedding created by its corresponding encoder network.
+
+Both the encoder and decoder architecture is built by the combination of multiple blocks or layers where each block processes information in a specific way.
+
+It consists of 3 primary blocks:
+
+Multi-head Attention block
+Addition and Normalization block
+Feed-forward layers
+Multi-head attention block
+This is one of the most important blocks as in this layer multiple levels of masking( replacing random tokens in a sentence with the <MASK> token ) are performed over the predicting tokens, for example:
+
+Parallel #1 thread: Entire sentence is replaced by the <MASK> tokens.
+
+Parallel #2 thread: Multiple bi-gram tokens are replaced by the <MASK> tokens.
+
+Parallel #3+ thread: Arbitrary words within the sentence are replaced by the <MASK> token. 
+
+This masking is done in parallel instead of sequentially to avoid accumulating previous step errors for the same input sentence.
+
+Addition and Normalization block
+Different parameters within the multiple blocks contain values within different ranges, hence to add those values together, we scale the values of all the parameters into a single range using a monotonic function whose value converges to a constant value k as the input closes to infinity. This is performed so that uniform weight for all parameters is ensured while concatenating multiple parameters into a single one.
+
+Feed-forward Layers
+The feed-forward layers compose the basic building block of any neural network and are composed of hidden layers containing a fixed number of neurons. These layers contain the process, and store information coming from the previous layers as weights and forward the processed/ updated information to the next layer. The feed-forward neural network layers are specially designed to move information in a sequential uni-directional manner.
+
+BERT Encoder Cell
+
+BERT each encoder cell contains a multi-head attention that accepts raw tokenized text, any other preprocessing (lowercase, stemming, stopwords removal, etc) of the text is completely task-dependent. The tokenized text is then uni-label encoded and passed into the multi-head attention block where the text tokens are randomly masked and forwarded to the add and norm layer. We use a skip connection from the input layer to combine both the complete clean text as well as randomly masked tokens and after multiple such iterations, we then pass the information into the standard feed-forward block which also adds and normalizes the current as well as the original information from the first “add and normalization” layer. 
+
+The result is an embedding containing clean, masked, and compressed information regarding the original input text. 
+
+The skip connections are important to remember clean unprocessed information as well as newly processed information when the data is passed through each block. 
+
+Another important addition to processing text using a BERT encoder cell is that it is bi-directional i.e. the tokens are passed through the encoder cell from the beginning of the sentence to the end and vice versa (both the direction of the text). This is done so that information learned at the end of the sentence should also be able to adjust the weight of the embedding and cause a semantic change at the beginning of the output tokens if required.
+
+ GPT Decoder Cell
+
+The GPT decoder cell accepts masked embeddings from the BERT Encoder cell and passes it to the masked multiple self-attention block which follows the same architecture as the multi-head attention block but works sequentially instead of parallel, where instead of learning the encoding of the masks, this layer learns to decode the masked embeddings to semantically coherent tokens by paying attention to the multiple different parallel embeddings of the input text masked at different levels. 
+
+Following this, the output is added and normalized with the original embedding and passed to the standard feed-forward layer block where information is learned to decode the sentence from the processed embedding, and at the final layer, we try to match the predicted tokens with the clean output which is the backtracked over the entire encoder-decoder network. This training process continues over a very large corpus of examples, that not only learn the context of the sentences but also greatly improve the network’s capability in predicting missing <MASK> tokens, i.e. helps the network clean real-life corrupted sentences.
